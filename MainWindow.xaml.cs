@@ -1,23 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace WpfTreeApplication
 {
-	/// <summary>
-	/// Interaction logic for MainWindow.xaml
-	/// </summary>
 	public partial class MainWindow : Window
 	{
 		public MainWindow()
@@ -36,11 +25,6 @@ namespace WpfTreeApplication
 			var label7 = CreateNode("7");
 
 			AddRootNode(label1);
-
-			//var stackPanel2 = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
-			//stackPanel2.Children.Add(label2);
-			//stackPanel2.Children.Add(label3);
-			//this.nodeContainer.Children.Add(stackPanel2);
 
 			AddChildren(label1,
 						label2, label3, label4);
@@ -65,7 +49,7 @@ namespace WpfTreeApplication
 
 		private FrameworkElement CreateNode(string content)
 		{
-			return new Label()
+			return new Label
 			{
 				Content = content,
 				Width = 50,
@@ -79,7 +63,7 @@ namespace WpfTreeApplication
 
 		private void AddRootNode(FrameworkElement rootNode)
 		{
-			var topLevelStackPanel = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+			var topLevelStackPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
 			topLevelStackPanel.Children.Add(rootNode);
 			this.nodeContainer.Children.Add(topLevelStackPanel);
 		}
@@ -94,9 +78,8 @@ namespace WpfTreeApplication
 			StackPanel childStackPanel;
 			if (childPanelIndex >= stackPanels.Count())
 			{
-				childStackPanel = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+				childStackPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
 				this.nodeContainer.Children.Add(childStackPanel);
-				this.nodeContainer.UpdateLayout();
 			}
 			else
 			{
@@ -137,7 +120,7 @@ namespace WpfTreeApplication
 			return control.TransformToAncestor(this).Transform(new Point(control.ActualWidth / 2, control.ActualHeight));
 		}
 
-		public T FindParent<T>(DependencyObject child)
+		private T FindParent<T>(DependencyObject child)
 			where T : DependencyObject
 		{
 			var parentObject = VisualTreeHelper.GetParent(child);
