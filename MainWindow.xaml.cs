@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using WpfTreeApplication.Trees;
 
 namespace WpfTreeApplication
 {
 	public partial class MainWindow : Window
 	{
+		private Dictionary<char, FrameworkElement> controlByValue = new Dictionary<char, FrameworkElement>();
+
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -16,42 +20,20 @@ namespace WpfTreeApplication
 
 		private void Window_Loaded(object sender, RoutedEventArgs e)
 		{
-			var label1 = CreateNode("1");
-			var label2 = CreateNode("2");
-			var label3 = CreateNode("3");
-			var label4 = CreateNode("4");
-			var label5 = CreateNode("5");
-			var label6 = CreateNode("6");
-			var label7 = CreateNode("7");
+			var values = new[] { 'e', 'b', 'h', 'a', 'c', 'g', 'i', 'd', 'f' };
+			foreach (var value in values)
+				this.controlByValue.Add(value, CreateNodeControl(value));
 
-			AddRootNode(label1);
-
-			AddChildren(label1,
-						label2, label3, label4);
-
-			AddChildren(label2,
-						label5, label6);
-
-			AddChildren(label4,
-						label7);
-
-			this.nodeContainer.UpdateLayout();
-
-			ConnectNodes(label1,
-						label2, label3, label4);
-
-			ConnectNodes(label2,
-						label5, label6);
-
-			ConnectNodes(label4,
-						label7);
+			var tree = new BinarySearchTree();
+			tree.Initialize(values);
+			BuildTreeUI(tree);
 		}
 
-		private FrameworkElement CreateNode(string content)
+		private FrameworkElement CreateNodeControl(char content)
 		{
 			return new Label
 			{
-				Content = content,
+				Content = content.ToString(),
 				Width = 50,
 				Margin = new Thickness(10),
 				HorizontalContentAlignment = HorizontalAlignment.Center,
@@ -61,17 +43,49 @@ namespace WpfTreeApplication
 			};
 		}
 
-		private void AddRootNode(FrameworkElement rootNode)
+		private void BuildTreeUI(ATree tree)
+		{
+			AddRootNodeUI(tree.Root);
+			AddSubTreeUI(tree.Root);
+			this.nodeContainer.UpdateLayout();
+			ConnectSubTreeUI(tree.Root);
+		}
+
+		private void AddSubTreeUI(ANode subTreeRoot)
+		{
+			if (subTreeRoot != null)
+			{
+				foreach (var child in subTreeRoot.GetChildren())
+					AddChildUI(subTreeRoot, child);
+
+				foreach (var child in subTreeRoot.GetChildren())
+					AddSubTreeUI(child);
+			}
+		}
+
+		private void ConnectSubTreeUI(ANode subTreeRoot)
+		{
+			if (subTreeRoot != null)
+			{
+				foreach (var child in subTreeRoot.GetChildren())
+					ConnectChildUI(subTreeRoot, child);
+
+				foreach (var child in subTreeRoot.GetChildren())
+					ConnectSubTreeUI(child);
+			}
+		}
+
+		private void AddRootNodeUI(ANode root)
 		{
 			var topLevelStackPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
-			topLevelStackPanel.Children.Add(rootNode);
+			topLevelStackPanel.Children.Add(this.controlByValue[root.Value]);
 			this.nodeContainer.Children.Add(topLevelStackPanel);
 		}
 
-		private void AddChildren(FrameworkElement parentNode, params FrameworkElement[] childNodes)
+		private void AddChildUI(ANode parent, ANode child)
 		{
 			var stackPanels = this.nodeContainer.Children.Cast<StackPanel>().ToArray();
-			var parentStackPanel = FindParent<StackPanel>(parentNode);
+			var parentStackPanel = FindParent<StackPanel>(this.controlByValue[parent.Value]);
 			var parentPanelIndex = Array.IndexOf(stackPanels, parentStackPanel);
 			var childPanelIndex = parentPanelIndex + 1;
 
@@ -86,28 +100,23 @@ namespace WpfTreeApplication
 				childStackPanel = stackPanels[childPanelIndex];
 			}
 
-			foreach (var childNode in childNodes)
-				childStackPanel.Children.Add(childNode);
+			childStackPanel.Children.Add(this.controlByValue[child.Value]);
 		}
 
-		private void ConnectNodes(FrameworkElement parent, params FrameworkElement[] children)
+		private void ConnectChildUI(ANode parent, ANode child)
 		{
-			var startPoint = GetBottomMiddlePoint(parent);
+			var startPoint = GetBottomMiddlePoint(this.controlByValue[parent.Value]);
+			var endPoint = GetTopMiddlePoint(this.controlByValue[child.Value]);
 
-			foreach (var child in children)
+			this.overlay.Children.Add(new Line()
 			{
-				var endPoint = GetTopMiddlePoint(child);
-
-				this.overlay.Children.Add(new Line()
-				{
-					X1 = startPoint.X,
-					Y1 = startPoint.Y,
-					X2 = endPoint.X,
-					Y2 = endPoint.Y,
-					Stroke = Brushes.Black,
-					StrokeThickness = 1
-				});
-			}
+				X1 = startPoint.X,
+				Y1 = startPoint.Y,
+				X2 = endPoint.X,
+				Y2 = endPoint.Y,
+				Stroke = Brushes.Black,
+				StrokeThickness = 1
+			});
 		}
 
 		private Point GetTopMiddlePoint(FrameworkElement control)
